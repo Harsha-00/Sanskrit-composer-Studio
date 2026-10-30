@@ -98,6 +98,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: package
@@ -107,9 +108,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
         run: |
+          sed "s/<version>/$GITHUB_REF_NAME/" .github/release-notes.md > "$RUNNER_TEMP/notes.md"
           gh release view "$GITHUB_REF_NAME" --repo "$REPO" >/dev/null 2>&1 ||
             gh release create "$GITHUB_REF_NAME" --repo "$REPO" --title "Sanskrit Composer Studio $GITHUB_REF_NAME" \
-              --notes "Download SanskritComposerStudio-$GITHUB_REF_NAME.zip below, unzip it, and double-click the Start file for your computer. See the README for details and credits.
-
-✨ Vibe-coded disclaimer: this app was entirely vibe coded. Its human described what they wanted and an AI (Claude) wrote the code. The data comes from the credited scholarly sources and was checked carefully; the code was never written by a professional programmer. If the sandhi splitter ever proposes something Pāṇini would frown at, trust Pāṇini."
+              --notes-file "$RUNNER_TEMP/notes.md"
           gh release upload "$GITHUB_REF_NAME" pkg/SanskritComposerStudio-*.zip --repo "$REPO" --clobber
