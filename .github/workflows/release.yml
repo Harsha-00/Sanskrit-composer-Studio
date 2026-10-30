@@ -6,6 +6,7 @@ name: Build, test and release
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     tags: ['v*']
 
 permissions:
@@ -53,25 +54,44 @@ jobs:
       - name: Install Ruby and sqlite3 (Linux users do the same)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y ruby sqlite3
-      - name: Start with the launcher
+      - name: Start with the launcher (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # Launch the .bat the way Windows does (Git Bash would mangle its quoted name).
+          $dir = (Get-ChildItem pkg -Directory | Select-Object -First 1).FullName
+          Start-Process -FilePath (Join-Path $dir 'Start Sanskrit Studio (Windows).bat') -WorkingDirectory $dir -NoNewWindow `
+            -RedirectStandardOutput (Join-Path $dir 'server.log') -RedirectStandardError (Join-Path $dir 'server-errors.log')
+      - name: Start with the launcher (macOS, Linux)
+        if: runner.os != 'Windows'
         run: |
           cd pkg/SanskritComposerStudio-*/
           case "$RUNNER_OS" in
-            Windows) cmd //c 'call "Start Sanskrit Studio (Windows).bat"' > server.log 2>&1 & ;;
-            macOS)   sh "Start Sanskrit Studio (Mac).command" > server.log 2>&1 & ;;
-            Linux)   sh start-sanskrit-studio-linux.sh > server.log 2>&1 & ;;
+            macOS) sh "Start Sanskrit Studio (Mac).command" > server.log 2>&1 & ;;
+            Linux) sh start-sanskrit-studio-linux.sh > server.log 2>&1 & ;;
           esac
+      - name: Wait for the Studio
+        run: |
           for i in $(seq 90); do
             curl -fs http://127.0.0.1:4567/api/config >/dev/null && exit 0
             sleep 2
           done
-          cat server.log
           exit 1
       - name: Smoke test
         run: sh scripts/smoke_test.sh http://127.0.0.1:4567
       - name: Server log
         if: always()
-        run: cat pkg/SanskritComposerStudio-*/server.log || true
+        run: |
+          # Job logs need admin rights to download, so on failure the server output is also
+          # reported as an error annotation, which anyone can read.
+          for f in pkg/SanskritComposerStudio-*/server*.log; do
+            [ -f "$f" ] || continue
+            echo "== $f"; cat "$f"
+            if [ "${{ job.status }}" != success ]; then
+              printf '::error title=%s (%s)::%s\n' "$(basename "$f")" "$RUNNER_OS" \
+                "$(tail -c 4000 "$f" | awk '{gsub(/%/,"%25"); gsub(/\r/,""); printf "%s%%0A", $0}')"
+            fi
+          done
 
   publish:
     needs: test
@@ -89,5 +109,7 @@ jobs:
         run: |
           gh release view "$GITHUB_REF_NAME" --repo "$REPO" >/dev/null 2>&1 ||
             gh release create "$GITHUB_REF_NAME" --repo "$REPO" --title "Sanskrit Composer Studio $GITHUB_REF_NAME" \
-              --notes "Download SanskritComposerStudio-$GITHUB_REF_NAME.zip below, unzip it, and double-click the Start file for your computer. See the README for details and credits."
+              --notes "Download SanskritComposerStudio-$GITHUB_REF_NAME.zip below, unzip it, and double-click the Start file for your computer. See the README for details and credits.
+
+✨ Vibe-coded disclaimer: this app was entirely vibe coded. Its human described what they wanted and an AI (Claude) wrote the code. The data comes from the credited scholarly sources and was checked carefully; the code was never written by a professional programmer. If the sandhi splitter ever proposes something Pāṇini would frown at, trust Pāṇini."
           gh release upload "$GITHUB_REF_NAME" pkg/SanskritComposerStudio-*.zip --repo "$REPO" --clobber
