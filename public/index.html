@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="sa">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>संस्कृत-रचना-मञ्जूषा — Sanskrit Composer Studio</title>
+  <meta name="description" content="Sanskrit Composer Studio: write Sanskrit with phonetic typing and live chandas, with the Aṣṭādhyāyī, Dhātupāṭha, Śabdapāṭha and 19 dictionaries beside you." />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- ==================================================================
+         LEFT NAVIGATION SIDEBAR
+         ================================================================== -->
+    <aside class="app-sidebar">
+      <div>
+        <div class="sidebar-brand">
+          <div class="brand-icon">ॐ</div>
+          <div class="brand-text">
+            <h1>Sanskrit Studio</h1>
+            <p>संस्कृत-रचना-मञ्जूषा</p>
+          </div>
+        </div>
+
+        <div class="nav-section-label">Workspace</div>
+        <div class="nav-list">
+          <button class="nav-item active" data-view="view-studio">
+            <span class="nav-icon">✍️</span>
+            <span>Writing Studio</span>
+          </button>
+          <button class="nav-item" data-view="view-reader">
+            <span class="nav-icon">📖</span>
+            <span>Reader</span>
+          </button>
+        </div>
+
+        <div class="nav-section-label" style="margin-top:8px;">Reference</div>
+        <div class="nav-list">
+          <button class="nav-item" data-view="view-dictionary">
+            <span class="nav-icon">📚</span>
+            <span>Dictionaries (<span id="navDictCount">19</span>)</span>
+          </button>
+          <button class="nav-item" data-view="view-kosha">
+            <span class="nav-icon">🪷</span>
+            <span>Kosha Verses</span>
+          </button>
+          <button class="nav-item" data-view="view-dhatu">
+            <span class="nav-icon">⚡</span>
+            <span>Verbs (Dhātupāṭha)</span>
+          </button>
+          <button class="nav-item" data-view="view-shabda">
+            <span class="nav-icon">🏛️</span>
+            <span>Nouns (Śabdapāṭha)</span>
+          </button>
+          <button class="nav-item" data-view="view-sutra">
+            <span class="nav-icon">📜</span>
+            <span>Aṣṭādhyāyī &amp; Sūtras</span>
+          </button>
+          <button class="nav-item" data-view="view-abhyas">
+            <span class="nav-icon">🧪</span>
+            <span>Grammar &amp; Chandas</span>
+          </button>
+          <button class="nav-item" data-view="view-fonthelp">
+            <span class="nav-icon">🔤</span>
+            <span>Font Help, Sources &amp; Data</span>
+          </button>
+          <button class="nav-item" data-view="view-credits">
+            <span class="nav-icon">🙏</span>
+            <span>Credits &amp; Thanks</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Global Preferences -->
+      <div class="sidebar-footer">
+        <div class="sidebar-field">
+          <label for="globalScriptSelect">Display Script (लिपिः)</label>
+          <select id="globalScriptSelect">
+            <option value="deva">देवनागरी (Devanagari)</option>
+            <option value="telu">తెలుగు (Telugu)</option>
+            <option value="iast">IAST (saṃskṛtam)</option>
+            <option value="trilingual">Trilingual (All 3)</option>
+          </select>
+        </div>
+
+        <div class="sidebar-field">
+          <label for="phoneticSchemeSelect">Phonetic Input (टङ्कणम्)</label>
+          <select id="phoneticSchemeSelect">
+            <option value="itrans">ITRANS (rAma, kRShNa)</option>
+            <option value="rts">RTS Telugu (rAma, kRshNa)</option>
+            <option value="hk">Harvard-Kyoto (rAma, kRSNa)</option>
+            <option value="slp1">SLP1 (rAma, kfzRa)</option>
+            <option value="velthuis">Velthuis (raama, k.r.s.na)</option>
+            <option value="wx">WX (rAma, kqRNa)</option>
+            <option value="direct">Direct Unicode</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:6px; margin-top:4px;">
+          <button class="btn btn-sm" id="toggleFontHelpDrawerBtn" style="flex:1;" title="Show Clickable Sanskrit Character Map">
+            ⌨️ Key Map
+          </button>
+          <button class="btn btn-sm" id="toggleThemeBtn" title="Switch Light / Dark Theme">
+            🌗 Theme
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================================================================
+         MAIN WORKSPACE STAGE
+         ================================================================== -->
+    <main class="main-stage">
+
+      <!-- ================================================================
+           VIEW 1: WRITING STUDIO (Editor + Quick Lookup Assistant)
+           ================================================================ -->
+      <section class="stage-view active" id="view-studio">
+        <div class="view-header">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex:1;">
+            <button class="btn btn-sm" id="newDocBtn" title="New document (⌘N)">＋ New</button>
+            <button class="btn btn-sm" id="openDocBtn" title="Open a text file from your computer (⌘O)">📂 Open…</button>
+            <button class="btn btn-sm btn-primary" id="saveDocBtn" title="Save (⌘S)">💾 Save</button>
+            <button class="btn btn-sm" id="saveAsDocBtn" title="Save to a new file (⇧⌘S)">Save As…</button>
+            <span class="doc-name" id="docNameLabel">Untitled.txt</span>
+            <input type="file" id="docFileInput" accept=".txt,.md,.text,text/plain,text/markdown" hidden />
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:12px; color:var(--text-secondary);">Convert Editor:</span>
+            <button class="btn btn-sm" id="convertEditorDevaBtn">देवनागरी</button>
+            <button class="btn btn-sm" id="convertEditorTeluBtn">తెలుగు</button>
+            <button class="btn btn-sm" id="convertEditorIastBtn">IAST</button>
+          </div>
+        </div>
+
+        <div class="studio-split-layout">
+          <!-- Left Column: Sanskrit Editor -->
+          <div class="studio-editor-col">
+            <div class="studio-bar">
+              <div class="studio-translit-controls" title="Transliteration Input Scheme &amp; Target Script in Typing Space">
+                <label for="studioSchemeSelect" class="studio-ctrl-label">⌨️ Input:</label>
+                <select id="studioSchemeSelect" class="studio-ctrl-select">
+                  <option value="itrans">ITRANS (rAma, kRShNa)</option>
+                  <option value="rts">RTS Telugu (rAma, kRshNa)</option>
+                  <option value="hk">Harvard-Kyoto (rAma, kRSNa)</option>
+                  <option value="slp1">SLP1 (rAma, kfzRa)</option>
+                  <option value="velthuis">Velthuis (raama, k.r.s.na)</option>
+                  <option value="wx">WX (rAma, kqRNa)</option>
+                  <option value="direct">Direct Unicode</option>
+                </select>
+                <label for="studioScriptSelect" class="studio-ctrl-label">लिपिः:</label>
+                <select id="studioScriptSelect" class="studio-ctrl-select">
+                  <option value="deva">देवनागरी (Devanagari)</option>
+                  <option value="telu">తెలుగు (Telugu)</option>
+                  <option value="iast">IAST (Roman)</option>
+                  <option value="trilingual">Trilingual</option>
+                </select>
+                <button class="btn btn-sm" id="studioKeyMapBtn" title="Toggle Clickable Sanskrit Key Map">⌨️ Key Map</button>
+              </div>
+              <button class="btn btn-sm" id="insertDandaBtn" title="Insert Danda ।">।</button>
+              <button class="btn btn-sm" id="insertDoubleDandaBtn" title="Insert Double Danda ॥">॥</button>
+            </div>
+
+            <!-- Live Transliteration Options & Word Candidates Bar in the Typing Space -->
+            <div class="studio-translit-options-bar" id="studioTranslitOptionsBar">
+              <span class="badge" id="liveTypingIndicator">⌨️ Direct Typing: ITRANS</span>
+              <div class="translit-candidates-strip" id="studioTranslitCandidates">
+                <span class="translit-hint">Type any word phonetically (e.g. <code>rama</code>, <code>sutra</code>, <code>krishna</code>, <code>shiva</code>) to see clickable transliteration options here (or press <code>1–8</code> / <code>Tab</code> to choose).</span>
+              </div>
+            </div>
+
+            <textarea id="sanskritEditor" class="sanskrit-editor" placeholder="Type directly here in English/Roman phonetics (e.g. vAgarthAviva saMpRktau) or Unicode! Click any transliteration option above (or press 1-8 / Tab) while typing. Double-click any word to inspect its meaning, verb root, noun declension, and Sandhi split in the right panel."></textarea>
+            <textarea id="compNotesInput" class="studio-notes" placeholder="Notes, Anvaya (word order), or translation..."></textarea>
+
+            <div class="studio-meter-footer">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                  <strong>📐 Live Chandas Meter (Line by Line):</strong>
+                  <span class="badge" id="liveMeterBadge">अनुष्टुभ् (श्लोकः)</span>
+                  <span id="liveSyllableStats" style="font-size:12px; color:var(--text-secondary);"></span>
+                </div>
+                <button class="btn btn-sm" id="lookupSelectedWordBtn">🔍 Inspect Selected Word</button>
+              </div>
+              <div id="liveChandasPadas" class="chandas-lines-container"></div>
+            </div>
+          </div>
+
+          <!-- Right Column: Quick Reference Assistant (Instant Lookup alongside Editor) -->
+          <div class="studio-assistant-col">
+            <div class="search-toolbar">
+              <input type="text" id="studioQuickLookupInput" class="search-input-lg" placeholder="Quick lookup any word (Devanagari, Telugu, Roman, English)..." />
+              <button class="btn btn-primary btn-sm" id="studioQuickLookupBtn">Lookup</button>
+            </div>
+            <div class="view-scroll-body" id="studioAssistantResults"></div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ================================================================
+           VIEW: READER (open PDFs and text files, look words up beside them)
+           ================================================================ -->
+      <section class="stage-view" id="view-reader">
+        <div class="view-header reader-toolbar">
+          <div class="reader-group">
+            <button class="btn btn-sm btn-primary" id="readerOpenBtn" title="Open a PDF or text file (⌘O)">📂 Open document…</button>
+            <input type="file" id="readerFileInput" accept=".pdf,.txt,.md,.text,application/pdf,text/plain,text/markdown" hidden />
+            <span class="doc-name" id="readerDocName">No document open</span>
+          </div>
+          <div class="reader-group">
+            <button class="btn btn-sm" id="readerPrevPage" title="Previous page">◀</button>
+            <input type="text" id="readerPageInput" class="reader-page-input" value="1" title="Go to page" />
+            <span class="reader-muted">/ <span id="readerPageCount">–</span></span>
+            <button class="btn btn-sm" id="readerNextPage" title="Next page">▶</button>
+          </div>
+          <div class="reader-group">
+            <button class="btn btn-sm" id="readerZoomOut" title="Zoom out (⌘−)">−</button>
+            <span class="reader-muted" id="readerZoomLabel"></span>
+            <button class="btn btn-sm" id="readerZoomIn" title="Zoom in (⌘+)">+</button>
+            <button class="btn btn-sm" id="readerFitBtn" title="Fit page width">Fit width</button>
+          </div>
+          <div class="reader-group reader-find">
+            <input type="text" id="readerFindInput" placeholder="Find in document" title="Find in the document's text (⌘F; Enter = next, ⇧Enter = previous)" />
+            <button class="btn btn-sm" id="readerFindPrev" title="Previous match">↑</button>
+            <button class="btn btn-sm" id="readerFindNext" title="Next match">↓</button>
+            <span class="reader-muted" id="readerFindCount"></span>
+          </div>
+          <span class="badge reader-status" id="readerTextStatus">Open a PDF or text file</span>
+        </div>
+
+        <div class="reader-split-layout">
+          <div class="reader-doc" id="readerDoc">
+            <div class="reader-empty">
+              <p><strong>Open a Sanskrit document</strong> with “Open document…”: PDF, .txt or .md.</p>
+              <p>In PDFs that contain text, and in text files, select or double-click a word to look it up in all dictionaries, the Dhātupāṭha and the Śabdapāṭha on the right, and use “Find in document”. Scanned PDFs are shown as page images; type words into the lookup box instead.</p>
+            </div>
+          </div>
+          <div class="reader-lookup-col">
+            <div class="search-toolbar">
+              <input type="text" id="readerLookupInput" class="search-input-lg" placeholder="Look up a word (Devanagari, Telugu, Roman, English)..." />
+              <button class="btn btn-primary btn-sm" id="readerLookupBtn">Lookup</button>
+            </div>
+            <div class="reader-lookup-hint" id="readerLookupHint"></div>
+            <div class="view-scroll-body" id="readerLookupResults"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           VIEW 2: MULTI-DICTIONARY SEARCH (All 14 Lexicons)
+           ================================================================ -->
+      <section class="stage-view" id="view-dictionary">
+        <div class="view-header">
+          <div class="view-header-title">
+            <h2>📚 Sanskrit Multi-Dictionary Search</h2>
+            <p>The 12 dictionaries listed by andhrabharati.com, from the Cologne Digital Sanskrit Lexicon (Monier-Williams, Apte, Wilson, Benfey, Vaidya, Cappeller, Macdonell, Śabdakalpadruma, Vācaspatyam and three English-Sanskrit) plus Amarakośa, Halāyudha, Vaijayantī, Bhāratī, Abhyankar and the two Candrikās</p>
+          </div>
+        </div>
+
+        <div class="search-toolbar">
+          <input type="text" id="dictSearchInput" class="search-input-lg" placeholder="Type in Devanagari (धर्म), Telugu (ధర్మ), Roman (dharma, rama, krishna), or English (lotus, water)..." />
+          <select id="dictBookSelect" title="Filter by Dictionary">
+            <option value="all">All dictionaries (सर्वे कोशाः)</option>
+          </select>
+          <select id="dictMatchSelect" title="Match Mode">
+            <option value="prefix">Starts With (आदिः)</option>
+            <option value="exact">Exact Match (तुल्यम्)</option>
+            <option value="contains">Contains Anywhere (मध्ये)</option>
+            <option value="suffix">Ends With (अन्तः)</option>
+          </select>
+          <select id="dictScopeSelect" title="Search Scope">
+            <option value="headword">Headwords Only</option>
+            <option value="fulltext">Full-Text Definitions (FTS5)</option>
+          </select>
+          <button class="btn btn-primary" id="dictSearchBtn">🔍 Search</button>
+        </div>
+
+        <div class="view-scroll-body" id="dictResultsContainer"></div>
+      </section>
+
+      <!-- ================================================================
+           VIEW 3: CLASSICAL KOSHA VERSE BROWSER (Amara, Halayudha, Vaijayanti, Akhyata)
+           ================================================================ -->
+      <section class="stage-view" id="view-kosha">
+        <div class="view-header">
+          <div class="view-header-title">
+            <h2>🪷 Classical Kosha Verse Reader (6,203 Ślokas)</h2>
+            <p>Browse Amarakosha, Halāyudhakosha, Vaijayantī Kosha, and Ākhyātacandrikā by Kāṇḍa and Varga</p>
+          </div>
+        </div>
+
+        <div class="search-toolbar">
+          <select id="koshaBookSelect">
+            <option value="amara">अमरकोशः — Amarakosha (Nāmaliṅgānuśāsanam)</option>
+            <option value="halayudha">हलायुधकोशः — Halāyudhakosha (Abhidhānaratnamālā)</option>
+            <option value="yaadava">वैजयन्तीकोशः — Vaijayantī Kosha (Yādavaprakāśa)</option>
+            <option value="akhyata">आख्यातचन्द्रिका — Ākhyātacandrikā (Verb Synonym Kosha)</option>
+          </select>
+          <select id="koshaKandaVargaSelect" style="min-width:220px;"></select>
+          <input type="text" id="koshaVerseSearchInput" class="search-input-lg" placeholder="Filter verses or synonyms in selected Kosha..." />
+          <button class="btn btn-primary" id="koshaBrowseBtn">Browse</button>
+        </div>
+
+        <div class="view-scroll-body" id="koshaVersesContainer"></div>
+      </section>
+
+      <!-- ================================================================
+           VIEW 4: DHATUPATHA & 10-LAKARA CONJUGATOR
+           ================================================================ -->
+      <section class="stage-view" id="view-dhatu">
+        <div class="view-header">
+          <div class="view-header-title">
+            <h2>⚡ Pāṇinian Dhātupāṭha &amp; 10-Lakāra Conjugator (2,259 Dhātus)</h2>
+            <p>Search by verbal root (भू, गम्, कृ), any inflected verb form (भवति, गच्छति, बभूव), or English meaning</p>
+          </div>
+        </div>
+
+        <div class="search-toolbar">
+          <input type="text" id="dhatuSearchInput" class="search-input-lg" placeholder="Search root (भू, गम्, bhu, gam), conjugated form (गच्छति, बभूव), or meaning (to be, go)..." />
+          <select id="dhatuGanaSelect">
+            <option value="all">All 10 Gaṇas (सर्वे गणाः)</option>
+            <option value="1">1. भ्वादिगणः</option>
+            <option value="2">2. अदादिगणः</option>
+            <option value="3">3. जुहोत्यादिगणः</option>
+            <option value="4">4. दिवादिगणः</option>
+            <option value="5">5. स्वादिगणः</option>
+            <option value="6">6. तुदादिगणः</option>
+            <option value="7">7. रुधादिगणः</option>
+            <option value="8">8. तनादिगणः</option>
+            <option value="9">9. क्र्यादिगणः</option>
+            <option value="10">10. चुरादिगणः</option>
+          </select>
+          <select id="dhatuPadaSelect">
+            <option value="all">All Padas (P / A / U)</option>
+            <option value="P">परस्मैपदी (P)</option>
+            <option value="A">आत्मनेपदी (A)</option>
+            <option value="U">उभयपदी (U)</option>
+          </select>
+          <button class="btn btn-primary" id="dhatuSearchBtn">🔍 Search Dhātu</button>
+        </div>
+
+        <div class="master-detail-layout">
+          <div class="master-list" id="dhatuListSidebar"></div>
+          <div class="detail-pane" id="dhatuDetailViewport"></div>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           VIEW 5: SHABDAPATHA & ALGORITHMIC VIBHAKTI GENERATOR
+           ================================================================ -->
+      <section class="stage-view" id="view-shabda">
+        <div class="view-header">
+          <div class="view-header-title">
+            <h2>🏛️ Śabdapāṭha &amp; Vibhakti Declension Generator (9,007 Paradigms)</h2>
+            <p>Browse 9,007 declined stems with Pāṇinian Prakriyā steps, or generate all 24 Vibhakti forms for any custom stem</p>
+          </div>
+        </div>
+
+        <div class="search-toolbar">
+          <input type="text" id="shabdaSearchInput" class="search-input-lg" placeholder="Search stem (राम, नदी, गुरु, राजन्, भवत्, rama, nadi) or meaning..." />
+          <select id="shabdaLingaSelect">
+            <option value="all">All Genders</option>
+            <option value="P">पुंलिङ्गः (Masculine)</option>
+            <option value="S">स्त्रीलिङ्गः (Feminine)</option>
+            <option value="N">नपुंसकलिङ्गः (Neuter)</option>
+          </select>
+          <button class="btn btn-primary" id="shabdaSearchBtn">🔍 Search Śabda</button>
+
+          <span style="color:var(--border-strong);">|</span>
+          <input type="text" id="customShabdaStemInput" placeholder="Custom stem (e.g. बालक, लता, ज्ञानिन्)..." style="width:190px;" />
+          <select id="customShabdaLingaSelect">
+            <option value="P">Masc (पुं)</option>
+            <option value="S">Fem (स्त्री)</option>
+            <option value="N">Neut (नपुं)</option>
+          </select>
+          <button class="btn" id="generateCustomShabdaBtn">⚡ Generate 24 Forms</button>
+        </div>
+
+        <div class="master-detail-layout">
+          <div class="master-list" id="shabdaListSidebar"></div>
+          <div class="detail-pane" id="shabdaDetailViewport"></div>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           VIEW 6: ASHTADHYAYI SUTRAPATHA & 7 VYAKARANA GRANTHAS
+           ================================================================ -->
+      <section class="stage-view" id="view-sutra">
+        <div class="view-header">
+          <div class="view-header-title">
+            <h2>📜 Pāṇinian Aṣṭādhyāyī Sūtrapāṭha &amp; Vyākaraṇa Corpus</h2>
+            <p>All 3,983 Sūtras with Kāśikā, Siddhānta Kaumudī, Laghu Kaumudī, Bālamanoramā, Vasu English &amp; Vārttikas</p>
+          </div>
+        </div>
+
+        <div class="search-toolbar">
+          <select id="vyakaranaModeSelect" style="font-weight:700;">
+            <option value="sutrapatha">📜 अष्टाध्यायी सूत्रपाठः (3,983 Sūtras)</option>
+            <option value="shivasutra">🔱 माहेश्वरसूत्राणि (14 Śiva Sūtras)</option>
+            <option value="pratyahara">🔗 प्रत्याहारसूची (52 Pratyāhāras)</option>
+            <option value="ganapatha">📦 गणपाठः (262 Gaṇapāṭha Groups)</option>
+            <option value="krut">⚙️ कृत्-प्रत्ययाः (129 Kṛt Suffixes)</option>
+            <option value="unaadi">🌱 उणादिसूत्राणि (748 Uṇādi Sūtras)</option>
+            <option value="linganushasanam">⚖️ पाणिनीय-लिङ्गानुशासनम् (189 Sūtras)</option>
+            <option value="shiksha">🗣️ पाणिनीयशिक्षा (60 Ślokas)</option>
+          </select>
+          <select id="sutraAdhyayaSelect">
+            <option value="all">All Adhyāyas (1–8)</option>
+            <option value="1">Adhyāya 1</option>
+            <option value="2">Adhyāya 2</option>
+            <option value="3">Adhyāya 3</option>
+            <option value="4">Adhyāya 4</option>
+            <option value="5">Adhyāya 5</option>
+            <option value="6">Adhyāya 6</option>
+            <option value="7">Adhyāya 7</option>
+            <option value="8">Adhyāya 8</option>
+          </select>
+          <select id="sutraPadaSelect">
+            <option value="all">All Pādas (1–4)</option>
+            <option value="1">Pāda 1</option>
+            <option value="2">Pāda 2</option>
+            <option value="3">Pāda 3</option>
+            <option value="4">Pāda 4</option>
+          </select>
+          <input type="text" id="sutraSearchInput" class="search-input-lg" placeholder="Search Sūtra number (1.1.1, 6.1.77), text (वृद्धिरादैच्, इको यणचि), or meaning..." />
+          <button class="btn btn-primary" id="sutraSearchBtn">🔍 Search</button>
+        </div>
+
+        <div class="master-detail-layout">
+          <div class="master-list" id="sutraListSidebar"></div>
+          <div class="detail-pane" id="sutraDetailViewport"></div>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           VIEW 7: SANSKRITABHYAS GRAMMAR & CHANDAS LAB
+           ================================================================ -->
+      <section class="stage-view" id="view-abhyas">
+        <div class="view-header">
+          <div class="view-header-title">
+            <h2>🧪 Grammar Reference &amp; Chandas Lab</h2>
+            <p>Sandhi joiner/splitter and Chandas scanner are computed by the app's rule engine — confirm results against the sūtras. The reference tables were written for this app (they are not from sanskritabhyas.in); every sūtra and vārttika they cite has been checked against the Aṣṭādhyāyī text.</p>
+          </div>
+        </div>
+
+        <div class="search-toolbar">
+          <div class="sub-tabs" id="abhyasSubTabs">
+            <button class="sub-tab-btn active" data-abhyas-view="interactive-tools">🛠️ Sandhi &amp; Chandas Tools</button>
+            <button class="sub-tab-btn" data-abhyas-view="sandhi">1. सन्धि-प्रकरणम् (Sandhi)</button>
+            <button class="sub-tab-btn" data-abhyas-view="samasa">2. समासः (Samāsa)</button>
+            <button class="sub-tab-btn" data-abhyas-view="karaka">3. कारक-उपपदविभक्तिः (Kāraka)</button>
+            <button class="sub-tab-btn" data-abhyas-view="pratyaya">4. प्रत्ययाः (Pratyayas)</button>
+            <button class="sub-tab-btn" data-abhyas-view="vachya_anuvad">5. वाच्यपरिवर्तनम् &amp; पत्रम्</button>
+            <button class="sub-tab-btn" data-abhyas-view="avyaya_sankhya">6. अव्यय-उपसर्ग-संख्या-समयाः</button>
+          </div>
+        </div>
+
+        <div class="view-scroll-body" id="abhyasBodyContainer"></div>
+      </section>
+
+      <!-- ================================================================
+           VIEW 8: FONT HELP, SOURCES & DATA
+           ================================================================ -->
+      <section class="stage-view" id="view-fonthelp">
+        <div class="view-header">
+          <div class="view-header-title">
+            <h2>🔤 Font Help, Sources &amp; Data</h2>
+            <p>Phonetic input schemes (ITRANS, RTS, SLP1, HK, Velthuis, WX, IAST), where every dataset comes from, and the original Andhra Bharati and ashtadhyayi.com pages</p>
+          </div>
+        </div>
+        <div class="view-scroll-body" id="fontHelpBodyContainer"></div>
+      </section>
+
+      <!-- ================================================================
+           VIEW 9: CREDITS & THANKS
+           ================================================================ -->
+      <section class="stage-view" id="view-credits">
+        <div class="view-header">
+          <div class="view-header-title">
+            <h2>🙏 Credits &amp; Thanks · कृतज्ञता</h2>
+            <p>This Studio stands on the work of the people and projects below. Please visit and support the original sites.</p>
+          </div>
+        </div>
+        <div class="view-scroll-body">
+          <div class="grid-2col">
+
+            <div class="card credit-card">
+              <div class="card-header">
+                <div class="card-title">ashtadhyayi.com</div>
+                <span class="badge">Neelesh Bodas</span>
+              </div>
+              <p>The comprehensive study portal for Pāṇinian grammar, built and maintained by Neelesh Bodas since 2015.
+                 The Studio's grammar data comes from the site's public data repository
+                 (<a href="https://github.com/ashtadhyayi-com/data" target="_blank" rel="noopener">ashtadhyayi-com/data</a>,
+                 commit <code>a9f9112</code>, the version the site serves):</p>
+              <ul>
+                <li>the Aṣṭādhyāyī sūtrapāṭha with padaccheda, anuvṛtti, sūtrārtha, Kāśikā, Siddhānta Kaumudī, Laghu Kaumudī, Bālamanoramā and vārttikas</li>
+                <li>the Dhātupāṭha and its conjugation and kṛdanta tables; the Śabdapāṭha with its declensions and prakriyā</li>
+                <li>Śiva-sūtras, pratyāhāras, gaṇapāṭha, uṇādi-sūtras, liṅgānuśāsana and Pāṇinīya Śikṣā</li>
+                <li>seven kośas: Bhāratī, Abhyankar's grammar dictionary, Amarakośa, Halāyudha, Vaijayantī, Ākhyātacandrikā and Upasargārthacandrikā</li>
+              </ul>
+              <p>Every "ashtadhyayi.com ↗" button opens the same sūtra, dhātu or śabda on ashtadhyayi.com, which has much more:
+                 all its commentaries, Mahābhāṣya, Nyāsa, Padamañjarī, prakriyā, audio and courses.
+                 Corrections to this data belong on ashtadhyayi.com (use its feedback form).</p>
+              <div class="credit-links">
+                <a class="btn btn-primary" href="https://ashtadhyayi.com/" target="_blank" rel="noopener">Visit ashtadhyayi.com ↗</a>
+              </div>
+            </div>
+
+            <div class="card credit-card">
+              <div class="card-header">
+                <div class="card-title">Andhra Bharati · ఆంధ్రభారతి</div>
+                <span class="badge">andhrabharati.com</span>
+              </div>
+              <p>Andhra Bharati's Sanskrit dictionary page brings twelve classical dictionaries together in one search, with
+                 transliteration keyboards and display in Telugu and other Indian scripts. The Studio offers the same twelve
+                 dictionaries, and its character map follows the spirit of Andhra Bharati's Font Help.</p>
+              <p>Nothing from andhrabharati.com is copied here: its pages, code and Telugu resources stay on its own site,
+                 and the "Andhra Bharati ↗" buttons take you there. The dictionary texts themselves come from the Cologne
+                 Digital Sanskrit Lexicon (below), the same texts Andhra Bharati displays.</p>
+              <div class="credit-links">
+                <a class="btn btn-primary" href="https://www.andhrabharati.com/dictionary/sanskrit/" target="_blank" rel="noopener">Andhra Bharati Sanskrit dictionary ↗</a>
+                <a class="btn" href="https://www.andhrabharati.com/dictionary/sanskrit/FontHelp" target="_blank" rel="noopener">Font Help ↗</a>
+                <a class="btn" href="https://www.andhrabharati.com/" target="_blank" rel="noopener">andhrabharati.com ↗</a>
+              </div>
+            </div>
+
+            <div class="card credit-card">
+              <div class="card-header">
+                <div class="card-title">Cologne Digital Sanskrit Lexicon</div>
+                <span class="badge">CC BY-SA 4.0</span>
+              </div>
+              <p>The twelve Sanskrit-English and English-Sanskrit dictionaries are the digitised texts of the Cologne Digital
+                 Sanskrit Dictionaries (Universität zu Köln), from their source repository
+                 <a href="https://github.com/sanskrit-lexicon/csl-orig" target="_blank" rel="noopener">sanskrit-lexicon/csl-orig</a>.
+                 Our thanks to everyone who has keyed, proofread and corrected these texts over the years.</p>
+              <ul class="credit-dicts">
+                <li>Monier-Williams, Sanskrit-English Dictionary (1899)</li>
+                <li>Apte, Practical Sanskrit-English Dictionary (1890)</li>
+                <li>Wilson, Sanskrit-English Dictionary (1832)</li>
+                <li>Benfey, Sanskrit-English Dictionary (1866)</li>
+                <li>L. R. Vaidya, Standard Sanskrit-English Dictionary (1889)</li>
+                <li>Cappeller, Sanskrit-English Dictionary (1891)</li>
+                <li>Macdonell, Practical Sanskrit Dictionary (1893)</li>
+                <li>Śabdakalpadruma (Rādhākānta Deva)</li>
+                <li>Vācaspatyam (Tārānātha Tarkavācaspati)</li>
+                <li>Monier-Williams, English-Sanskrit Dictionary (1851)</li>
+                <li>Borooah, English-Sanskrit Dictionary (1877)</li>
+                <li>Apte, Student's English-Sanskrit Dictionary (1920)</li>
+              </ul>
+              <p class="credit-fine">Cite as: Cologne Digital Sanskrit Dictionaries, Cologne University,
+                 <a href="https://www.sanskrit-lexicon.uni-koeln.de/" target="_blank" rel="noopener">https://www.sanskrit-lexicon.uni-koeln.de</a>.
+                 The texts are licensed
+                 <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>;
+                 the Studio's converted copy (Devanagari display, correction records applied) is shared under the same licence.</p>
+              <div class="credit-links">
+                <a class="btn btn-primary" href="https://www.sanskrit-lexicon.uni-koeln.de/" target="_blank" rel="noopener">Cologne Sanskrit Lexicon ↗</a>
+              </div>
+            </div>
+
+            <div class="card credit-card">
+              <div class="card-header">
+                <div class="card-title">Also with thanks to</div>
+              </div>
+              <ul>
+                <li><a href="https://github.com/ambuda-org/vidyut" target="_blank" rel="noopener">Vidyut</a> (Ambuda project), whose
+                    Pāṇinian prakriyā engine generated the verb forms on ashtadhyayi.com that the Dhātupāṭha tables show.</li>
+                <li><a href="https://mozilla.github.io/pdf.js/" target="_blank" rel="noopener">PDF.js</a> (Mozilla, Apache-2.0),
+                    which shows PDFs in the Reader.</li>
+                <li><a href="https://github.com/ruby/webrick" target="_blank" rel="noopener">WEBrick</a> (BSD-2-Clause), the Studio's
+                    web server; on Windows, <a href="https://rubyinstaller.org/" target="_blank" rel="noopener">RubyInstaller</a>
+                    and <a href="https://sqlite.org/" target="_blank" rel="noopener">SQLite</a> (public domain), which come with the download.</li>
+                <li>Śrīśa Chandra Vasu, whose 1891 English translation of the Aṣṭādhyāyī (as published in the ashtadhyayi.com data) appears with the sūtras.</li>
+                <li>Pāṇini, the commentators and the lexicographers whose works these are, and the scholars and volunteers
+                    who edited and digitised them.</li>
+              </ul>
+              <p class="credit-fine">Computed, not looked up: the sandhi joiner and splitter, the chandas scanner, the
+                 "Generate 24 forms" declension tool and the Telugu and IAST renderings are produced by this Studio's own
+                 rule engine and transliterator. Mistakes in them are ours, not the sources' — check unusual results
+                 against the sūtras and dictionaries.</p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ====================================================================
+       FLOATING FONTHELP CLICKABLE KEYBOARD DRAWER
+       ==================================================================== -->
+  <div class="keyboard-drawer" id="fontHelpDrawer">
+    <div class="keyboard-drawer-header">
+      <div>
+        <strong>⌨️ Clickable Sanskrit Character Map</strong>
+        <span style="font-size:12px; color:var(--text-secondary); margin-left:10px;">Click any key to insert into the active editor or search box.</span>
+      </div>
+      <button class="btn btn-sm" id="closeFontHelpDrawerBtn">✕ Close</button>
+    </div>
+    <div class="keyboard-drawer-body" id="fontHelpDrawerGrid"></div>
+  </div>
+
+  <!-- ====================================================================
+       PUBLISHED SOURCE EXPLANATION MODAL (Grammar Rules, Sutras & Chandas)
+       ==================================================================== -->
+  <div class="modal-backdrop" id="ruleExplanationModal" aria-hidden="true">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="ruleModalTitle">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="ruleModalTitle">📖 Published Rule &amp; Prosody Explanation</div>
+          <div class="modal-subtitle" id="ruleModalSubtitle">Verbatim explanations from S.C. Vasu (1891), K.V. Abhyankar (1961), V.S. Apte (1890), Monier-Williams (1899), Macdonell (1893) &amp; Wilson (1832)</div>
+        </div>
+        <button class="btn btn-sm" id="closeRuleModalBtn" title="Close (Esc)">✕ Close</button>
+      </div>
+      <div class="modal-body" id="ruleModalBody"></div>
+    </div>
+  </div>
+
+  <script src="/vendor/pdfjs/pdf.min.js"></script>
+  <script src="/files.js"></script>
+  <script src="/app.js"></script>
+  <script src="/reader.js"></script>
+  <script src="/layout.js"></script>
+</body>
+</html>

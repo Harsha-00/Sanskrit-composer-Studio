@@ -1,0 +1,16 @@
+cologne.sqlite — the twelve Cologne Digital Sanskrit Lexicon dictionaries
+
+Source: Cologne Digital Sanskrit Dictionaries, Cologne University,
+        https://www.sanskrit-lexicon.uni-koeln.de
+        source texts: https://github.com/sanskrit-lexicon/csl-orig (v02/<dict>/<dict>.txt)
+
+Licence: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+         https://creativecommons.org/licenses/by-sa/4.0/
+
+Changes made in this copy: the SLP1 transliteration is shown in Devanagari with an IAST twin, the
+inline correction records are applied, and records that point to another record ({{Lbody=N}}) show
+that record's text. This adapted database is shared under the same licence, CC BY-SA 4.0.
+
+Dictionaries: Wilson (1832), Benfey (1866), L. R. Vaidya (1889), Cappeller (1891), Macdonell (1893),
+Monier-Williams Sanskrit-English (1899), Apte (1890), Śabdakalpadruma, Vācaspatyam,
+Monier-Williams English-Sanskrit (1851), Borooah (1877), Apte English-Sanskrit (1920).

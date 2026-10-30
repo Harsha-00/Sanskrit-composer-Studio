@@ -1,0 +1,5 @@
+PDF.js 3.11.174 (Mozilla, Apache License 2.0)
+https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/
+Verified against cdnjs SRI hashes:
+  pdf.min.js        sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==
+  pdf.worker.min.js sha512-BbrZ76UNZq5BhH7LL7pn9A4TKQpQeNCHOo65/akfelcIBbcVvYWOFQKPXIrykE3qZxYjmDX573oa4Ywsc7rpTw==

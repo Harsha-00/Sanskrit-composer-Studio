@@ -1,0 +1,5 @@
+*
+!lib/
+!public/
+!data/reference.sqlite
+!data/cologne.sqlite

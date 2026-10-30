@@ -1,0 +1,93 @@
+# Builds SanskritComposerStudio-<version>.zip, starts it with each launcher on Windows, macOS and
+# Linux, runs the smoke test, and (for a v* tag) attaches the zip to that tag's GitHub release.
+# The databases come from the data release (DATA_RELEASE), uploaded once by hand.
+name: Build, test and release
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+env:
+  DATA_RELEASE: data-v1
+  DATA_ZIP: sanskrit-studio-data-v1.zip
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download the databases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "$DATA_RELEASE" --pattern "$DATA_ZIP" --dir "$RUNNER_TEMP"
+      - name: Build the package
+        run: sh scripts/package.sh "$GITHUB_REF_NAME" "$RUNNER_TEMP/$DATA_ZIP"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package
+          path: dist/SanskritComposerStudio-*.zip
+          compression-level: 0
+
+  test:
+    needs: package
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: package
+          path: pkg
+      - name: Unzip
+        run: cd pkg && python -m zipfile -e SanskritComposerStudio-*.zip .
+      - name: Install Ruby and sqlite3 (Linux users do the same)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y ruby sqlite3
+      - name: Start with the launcher
+        run: |
+          cd pkg/SanskritComposerStudio-*/
+          case "$RUNNER_OS" in
+            Windows) cmd //c 'call "Start Sanskrit Studio (Windows).bat"' > server.log 2>&1 & ;;
+            macOS)   sh "Start Sanskrit Studio (Mac).command" > server.log 2>&1 & ;;
+            Linux)   sh start-sanskrit-studio-linux.sh > server.log 2>&1 & ;;
+          esac
+          for i in $(seq 90); do
+            curl -fs http://127.0.0.1:4567/api/config >/dev/null && exit 0
+            sleep 2
+          done
+          cat server.log
+          exit 1
+      - name: Smoke test
+        run: sh scripts/smoke_test.sh http://127.0.0.1:4567
+      - name: Server log
+        if: always()
+        run: cat pkg/SanskritComposerStudio-*/server.log || true
+
+  publish:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: package
+          path: pkg
+      - name: Attach the zip to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" --repo "$REPO" >/dev/null 2>&1 ||
+            gh release create "$GITHUB_REF_NAME" --repo "$REPO" --title "Sanskrit Composer Studio $GITHUB_REF_NAME" \
+              --notes "Download SanskritComposerStudio-$GITHUB_REF_NAME.zip below, unzip it, and double-click the Start file for your computer. See the README for details and credits."
+          gh release upload "$GITHUB_REF_NAME" pkg/SanskritComposerStudio-*.zip --repo "$REPO" --clobber
