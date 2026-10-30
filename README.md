@@ -15,11 +15,7 @@ Everything runs locally: no account, and nothing is uploaded. Buttons marked ↗
 [ashtadhyayi.com](https://ashtadhyayi.com/) or the
 [Andhra Bharati Sanskrit dictionary](https://www.andhrabharati.com/dictionary/sanskrit/).
 
-> **✨ Vibe-coded disclaimer.** This app was entirely vibe coded: its human described what they wanted,
-> and an AI (Claude) wrote the code, one cheerful request at a time. The *data* comes from the scholarly
-> sources credited below and was checked carefully; the *code* was never written by a professional
-> programmer. If the sandhi splitter ever proposes something Pāṇini would frown at, trust Pāṇini.
-> Bug reports are welcome under [Issues](../../issues).
+> **Disclaimer:** this app is 100% vibe coded. I don't fully know how it works. Claude does, hopefully.
 
 ## Install
 

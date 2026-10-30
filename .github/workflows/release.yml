@@ -54,37 +54,35 @@ jobs:
       - name: Install Ruby and sqlite3 (Linux users do the same)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y ruby sqlite3
-      - name: Start with the launcher (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          # Launch the .bat the way Windows does (Git Bash would mangle its quoted name).
-          $dir = (Get-ChildItem pkg -Directory | Select-Object -First 1).FullName
-          Start-Process -FilePath (Join-Path $dir 'Start Sanskrit Studio (Windows).bat') -WorkingDirectory $dir -NoNewWindow `
-            -RedirectStandardOutput (Join-Path $dir 'server.log') -RedirectStandardError (Join-Path $dir 'server-errors.log')
-      - name: Start with the launcher (macOS, Linux)
-        if: runner.os != 'Windows'
+      # Start, wait and test in one step: on Windows the runner ends a step's processes when the
+      # step finishes, so a server started in an earlier step would already be gone.
+      - name: Start with the launcher and run the smoke test
         run: |
           cd pkg/SanskritComposerStudio-*/
           case "$RUNNER_OS" in
-            macOS) sh "Start Sanskrit Studio (Mac).command" > server.log 2>&1 & ;;
-            Linux) sh start-sanskrit-studio-linux.sh > server.log 2>&1 & ;;
+            # Launch the .bat the way Windows does (Git Bash would mangle its quoted name).
+            Windows) powershell -NoProfile -Command 'Start-Process -FilePath (Join-Path (Get-Location) "Start Sanskrit Studio (Windows).bat") -NoNewWindow -RedirectStandardOutput server.log -RedirectStandardError server-errors.log' ;;
+            macOS)   sh "Start Sanskrit Studio (Mac).command" > server.log 2>&1 & ;;
+            Linux)   sh start-sanskrit-studio-linux.sh > server.log 2>&1 & ;;
           esac
-      - name: Wait for the Studio
-        run: |
+          up=no
           for i in $(seq 90); do
-            curl -fs http://127.0.0.1:4567/api/config >/dev/null && exit 0
+            if curl -fs -m 10 http://127.0.0.1:4567/api/config >/dev/null; then up=yes; break; fi
             sleep 2
           done
-          exit 1
-      - name: Smoke test
-        run: sh scripts/smoke_test.sh http://127.0.0.1:4567
+          if [ "$up" != yes ]; then
+            { echo "curl:"; curl -sv -m 10 http://127.0.0.1:4567/api/config 2>&1 | tail -15
+              echo "processes:"; ps -W 2>/dev/null | grep -iE "ruby|sqlite" || ps aux | grep -iE "ruby|sqlite"; } > diagnostics.log
+            exit 1
+          fi
+          sh "$GITHUB_WORKSPACE/scripts/smoke_test.sh" http://127.0.0.1:4567 2>&1 | tee smoke.log
+          exit "${PIPESTATUS[0]}"
       - name: Server log
         if: always()
         run: |
           # Job logs need admin rights to download, so on failure the server output is also
           # reported as an error annotation, which anyone can read.
-          for f in pkg/SanskritComposerStudio-*/server*.log; do
+          for f in pkg/SanskritComposerStudio-*/*.log; do
             [ -f "$f" ] || continue
             echo "== $f"; cat "$f"
             if [ "${{ job.status }}" != success ]; then
